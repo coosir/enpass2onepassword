@@ -33,7 +33,7 @@ func (login *Login) Generate(items []EnpassItem) [][]string {
 			}
 
 			// set the uppercase to Label because "Enpass" exported values contain different values
-			label := strings.ToUpper(field.Label)
+			label := strings.ToUpper(field.Type)
 
 			if fieldValuesByLabel[label] == nil {
 				fieldValuesByLabel[label] = []string{field.Value}
@@ -46,18 +46,23 @@ func (login *Login) Generate(items []EnpassItem) [][]string {
 		var notes string
 
 		// fill the username by email if the not null. In other case
-		if len(fieldValuesByLabel[EmailLabel]) > 0 {
-			username = joinValue(fieldValuesByLabel[EmailLabel])
-
-			if len(joinValue(fieldValuesByLabel[UsernameLabel])) > 0 {
-				notes = fmt.Sprintf("username(s): %s;\n", joinValue(fieldValuesByLabel[UsernameLabel]))
-			}
-		} else if len(joinValue(fieldValuesByLabel[UsernameLabel])) > 0 {
+		if len(fieldValuesByLabel[UsernameLabel]) > 0 {
 			username = joinValue(fieldValuesByLabel[UsernameLabel])
+			if len(joinValue(fieldValuesByLabel[EmailLabel])) > 0 {
+				notes = fmt.Sprintf("Emails(s): %s;", joinValue(fieldValuesByLabel[EmailLabel]))
+			}
+		} else if len(joinValue(fieldValuesByLabel[EmailLabel])) > 0 {
+			username = joinValue(fieldValuesByLabel[EmailLabel])
 		}
 
-		website := joinValue(fieldValuesByLabel[UrlLabel])
-		password := joinValue(fieldValuesByLabel[PasswordLabel])
+		if len(fieldValuesByLabel[UrlLabel]) > 1 {
+			notes = notes + fmt.Sprintf(" Url(s): %s;", joinValue(fieldValuesByLabel[UrlLabel]))
+		}
+		if len(fieldValuesByLabel[PasswordLabel]) > 1 {
+			notes = notes + fmt.Sprintf(" Passwords(s): %s;", joinValue(fieldValuesByLabel[PasswordLabel]))
+		}
+		website := oneValue(fieldValuesByLabel[UrlLabel])
+		password := oneValue(fieldValuesByLabel[PasswordLabel])
 
 		if item.Note != "" {
 			notes = notes + item.Note
@@ -83,4 +88,15 @@ func joinValue(source []string) (result string) {
 	}
 
 	return result
+}
+
+func oneValue(source []string) (result string) {
+	for _, v := range source {
+		if result == "" {
+			return v
+		} else {
+			return v
+		}
+	}
+	return ""
 }
